@@ -1,71 +1,31 @@
 import pandas as pd
-import scipy.stats
+import plotly.express as px
 import streamlit as st
-import time
+car_data = pd.read_csv('vehicles_us.csv')
+car_data_scatter = car_data.dropna(subset=['odometer', 'price'])
+st.header('Análisis de vehículos usados')
+st.write(car_data.head())
 
-# Variables de estado
-if 'experiment_no' not in st.session_state:
-    st.session_state['experiment_no'] = 0
+if 'chart_type' not in st.session_state:
+    st.session_state.chart_type = None
 
-if 'df_experiment_results' not in st.session_state:
-    st.session_state['df_experiment_results'] = pd.DataFrame(
-        columns=['no', 'iteraciones', 'media']
-    )
+show_histogram = st.button(
+    'Mostrar histograma',
+    key='histogram_button'
+)
+if show_histogram:
+    st.session_state.chart_type = 'histogram'
 
-st.header('Lanzar una moneda')
+show_scatter = st.button('Mostrar gráfico de dispersión', key='scatter_button')
 
-chart = st.empty()
+if show_scatter:
+    st.session_state.chart_type = 'scatter'
 
+if st.session_state.chart_type == 'histogram':
+    fig = px.histogram(car_data, x='price', nbins=50, title='Distribución de precios de vehiculos usados', labels={'price': 'Precio (USD)' })
+    st.plotly_chart(fig, key='histogram_chart')
 
-def toss_coin(n):
+elif st.session_state.chart_type == 'scatter':
+    fig = px.scatter(car_data_scatter, x='odometer', y='price', title='Relación entre kilometraje y precio', labels={'odometer': 'Kilometraje', 'price': 'Precio (USD)'})
+    st.plotly_chart(fig, key='scatter_chart')
 
-    trial_outcomes = scipy.stats.bernoulli.rvs(p=0.5, size=n)
-
-    mean = None
-    outcome_no = 0
-    outcome_1_count = 0
-    means = []
-
-    for r in trial_outcomes:
-        outcome_no += 1
-
-        if r == 1:
-            outcome_1_count += 1
-
-        mean = outcome_1_count / outcome_no
-        means.append(mean)
-
-        chart.line_chart(means)
-        time.sleep(0.05)
-
-    return mean
-
-
-number_of_trials = st.slider('¿Número de intentos?', 1, 1000, 10)
-
-start_button = st.button('Ejecutar')
-
-if start_button:
-    st.write(f'Experimento con {number_of_trials} intentos en curso.')
-
-    st.session_state['experiment_no'] += 1
-
-    mean = toss_coin(number_of_trials)
-
-    st.session_state['df_experiment_results'] = pd.concat([
-        st.session_state['df_experiment_results'],
-        pd.DataFrame(
-            data=[[
-                st.session_state['experiment_no'],
-                number_of_trials,
-                mean
-            ]],
-            columns=['no', 'iteraciones', 'media']
-        )
-    ], axis=0)
-
-    st.session_state['df_experiment_results'] = (
-        st.session_state['df_experiment_results'].reset_index(drop=True)
-    )
-
-st.write(st.session_state['df_experiment_results'])
