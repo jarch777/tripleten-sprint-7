@@ -48,8 +48,7 @@ streamlit run app.py
 
 Aplicación desplegada
 
-Acceder a la aplicación web en Render
-https://tripleten-sprint-7-hsji.onrender.com/
+[Acceder a la aplicación web en Render] (https://tripleten-sprint-7-hsji.onrender.com/)
 
 
 Autoría
